@@ -1,6 +1,14 @@
 # Viper V3 Pro Battery Tray
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Platform: Windows](https://img.shields.io/badge/platform-Windows%2010%2B-blue)](https://www.microsoft.com/windows)
+[![Language: PowerShell](https://img.shields.io/badge/language-PowerShell-5391FE)](https://learn.microsoft.com/powershell)
+[![Release](https://img.shields.io/github/v/release/damianyoko/razer-viper-v3-pro-battery-monitor-windows-tray)](https://github.com/damianyoko/razer-viper-v3-pro-battery-monitor-windows-tray/releases)
+
 A tiny system tray battery indicator for the **Razer Viper V3 Pro** wireless mouse. Pure PowerShell. No Razer Synapse, no kernel drivers, no admin required.
+
+<!-- Drop a screenshot or GIF here once captured: ![tray screenshot](docs/screenshot.png) -->
+
 
 ## Why
 
@@ -39,6 +47,16 @@ Synapse is bloatware. It runs three services, installs kernel-mode drivers, and 
 .\uninstall.ps1
 ```
 Removes the autostart entry and stops any running instance. Delete the folder afterwards if you want.
+
+## Troubleshooting
+
+**The icon doesn't appear** — Windows hides new tray icons by default. Click the `^` arrow in your taskbar and drag the battery icon out into the always-visible area.
+
+**It shows `?` (offline)** — your dongle isn't connected, or the mouse is asleep. Move the mouse and click "Refresh now". If it stays offline, unplug and replug the dongle.
+
+**"Running scripts is disabled on this system"** — your local PowerShell execution policy blocks scripts. Run this once: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`. The launcher passes `-ExecutionPolicy Bypass` so this normally isn't needed, but some corporate machines override that.
+
+**Two icons appear on boot** — duplicate Run entries. Run `.\uninstall.ps1` then `.\install.ps1` again to reset cleanly.
 
 ## How it works
 
