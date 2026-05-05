@@ -31,20 +31,20 @@ jobs:
         run: |
           $stage = "release-bundle"
           New-Item -ItemType Directory -Path $stage -Force | Out-Null
-          Copy-Item rust/target/release/razer-viper-tray.exe $stage/
+          Copy-Item rust/target/release/viper-tray.exe $stage/
           Copy-Item install.ps1 $stage/
           Copy-Item uninstall.ps1 $stage/
           Copy-Item README.md $stage/
           Copy-Item LICENSE $stage/
           Copy-Item CHANGELOG.md $stage/
           $tag = "${{ github.ref_name }}"
-          Compress-Archive -Path "$stage/*" -DestinationPath "razer-viper-tray-$tag.zip"
+          Compress-Archive -Path "$stage/*" -DestinationPath "viper-tray-$tag.zip"
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            razer-viper-tray-*.zip
-            rust/target/release/razer-viper-tray.exe
+            viper-tray-*.zip
+            rust/target/release/viper-tray.exe
           generate_release_notes: false
           body_path: CHANGELOG.md

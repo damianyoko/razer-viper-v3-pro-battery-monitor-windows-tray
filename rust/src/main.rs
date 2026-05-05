@@ -18,7 +18,7 @@ use windows::Win32::System::Threading::*;
 use windows::Win32::UI::WindowsAndMessaging::*;
 
 const REFRESH_SECS: i64 = 300;
-const APP_TITLE: &str = "Razer Viper V3 Pro Battery";
+const APP_TITLE: &str = "Viper Tray";
 
 // HANDLE is *mut c_void which isn't Send by default. We share kernel handles between
 // the UI thread and the worker thread; that's safe — Win32 sync handles are designed
@@ -210,7 +210,7 @@ fn acquire_singleton() -> Option<HANDLE> {
     unsafe {
         // CreateMutexW returns a valid handle even when the mutex already exists;
         // GetLastError() distinguishes the two cases. Local\ scope = no extra privilege.
-        let h = match CreateMutexW(None, true, w!("Local\\RazerViperV3ProBatteryTray-singleton")) {
+        let h = match CreateMutexW(None, true, w!("Local\\ViperTray-singleton")) {
             Ok(h) => h,
             Err(_) => return None,
         };

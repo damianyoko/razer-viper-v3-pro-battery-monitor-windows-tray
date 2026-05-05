@@ -1,13 +1,13 @@
 [package]
-name = "razer-viper-tray"
-version = "2.0.1"
+name = "viper-tray"
+version = "2.1.0"
 edition = "2021"
-description = "System tray battery indicator for Razer Viper V3 Pro"
+description = "Viper Tray — system tray battery indicator for Razer Viper V3 Pro"
 license = "MIT"
-repository = "https://github.com/damianyoko/razer-viper-v3-pro-battery-monitor-windows-tray"
+repository = "https://github.com/damianyoko/viper-tray"
 
 [[bin]]
-name = "razer-viper-tray"
+name = "viper-tray"
 path = "src/main.rs"
 
 [dependencies]

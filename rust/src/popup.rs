@@ -52,7 +52,7 @@ unsafe fn create_popup(text: &str) -> HWND {
             hCursor: cursor,
             hbrBackground: HBRUSH(null_mut()),
             lpszMenuName: PCWSTR::null(),
-            lpszClassName: w!("RazerViperV3ProBatteryPopup"),
+            lpszClassName: w!("ViperTrayPopup"),
         };
         let _ = RegisterClassW(&wc);
         CLASS_REGISTERED.store(true, Ordering::Release);
@@ -86,7 +86,7 @@ unsafe fn create_popup(text: &str) -> HWND {
 
     let hwnd = CreateWindowExW(
         WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
-        w!("RazerViperV3ProBatteryPopup"),
+        w!("ViperTrayPopup"),
         w!(""),
         WS_POPUP | WS_BORDER,
         x,

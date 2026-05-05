@@ -1,9 +1,9 @@
-# Viper V3 Pro Battery Tray
+# Viper Tray
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows%2010%2B-blue)](https://www.microsoft.com/windows)
 [![Language: Rust](https://img.shields.io/badge/language-Rust-orange)](https://www.rust-lang.org)
-[![Release](https://img.shields.io/github/v/release/damianyoko/razer-viper-v3-pro-battery-monitor-windows-tray)](https://github.com/damianyoko/razer-viper-v3-pro-battery-monitor-windows-tray/releases)
+[![Release](https://img.shields.io/github/v/release/damianyoko/viper-tray)](https://github.com/damianyoko/viper-tray/releases)
 
 A tiny system tray battery indicator for the **Razer Viper V3 Pro** wireless mouse. No Razer Synapse, no kernel drivers, no admin required. ~9 MB resident, single-file `.exe`.
 
@@ -43,7 +43,7 @@ If you only have a Razer mouse to monitor battery, you're paying a four-orders-o
 
 ### Easy: pre-built binary (recommended)
 
-1. Download `razer-viper-tray-vX.Y.Z.zip` from the [latest release](https://github.com/damianyoko/razer-viper-v3-pro-battery-monitor-windows-tray/releases/latest).
+1. Download `viper-tray-vX.Y.Z.zip` from the [latest release](https://github.com/damianyoko/viper-tray/releases/latest).
 2. Extract anywhere stable (e.g. `C:\Users\<you>\Tools\RazerBattery\`).
 3. From an unprivileged PowerShell prompt in that folder:
    ```powershell
@@ -54,10 +54,10 @@ If you only have a Razer mouse to monitor battery, you're paying a four-orders-o
 ### From source (requires Rust toolchain)
 
 ```powershell
-git clone https://github.com/damianyoko/razer-viper-v3-pro-battery-monitor-windows-tray
-cd razer-viper-v3-pro-battery-monitor-windows-tray\rust
+git clone https://github.com/damianyoko/viper-tray
+cd viper-tray\rust
 cargo build --release
-copy target\release\razer-viper-tray.exe ..\
+copy target\release\viper-tray.exe ..\
 cd ..
 .\install.ps1
 ```

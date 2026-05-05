@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.1.0 — 2026-05-05
+
+Renamed to **Viper Tray**.
+
+- Binary renamed: `razer-viper-tray.exe` → `viper-tray.exe`
+- Cargo package renamed: `razer-viper-tray` → `viper-tray`
+- App title, window class, and named mutex updated accordingly
+- HKCU autostart entry renamed: `RazerBatteryTray` → `ViperTray`
+- `install.ps1` automatically migrates the legacy entry; existing users just re-run it
+
 ## v2.0.1 — 2026-05-05
 
 Bug fixes from the v2.0.0 review.
