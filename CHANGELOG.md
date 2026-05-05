@@ -2,13 +2,15 @@
 
 ## v2.1.0 — 2026-05-05
 
-Renamed to **Viper Tray**.
+Renamed to **Viper Tray**. GitHub repo also renamed to `viper-tray` (old URLs redirect).
 
 - Binary renamed: `razer-viper-tray.exe` → `viper-tray.exe`
 - Cargo package renamed: `razer-viper-tray` → `viper-tray`
 - App title, window class, and named mutex updated accordingly
 - HKCU autostart entry renamed: `RazerBatteryTray` → `ViperTray`
 - `install.ps1` automatically migrates the legacy entry; existing users just re-run it
+- README footprint comparison updated to **Razer Synapse 4** (current Razer client) instead of Synapse 3
+- Comparison table reordered so Viper Tray gets the lead column
 
 ## v2.0.1 — 2026-05-05
 
