@@ -9,8 +9,8 @@ Synapse is bloatware. It runs three services, installs kernel-mode drivers, and 
 ## What you get
 
 - A horizontal battery icon in the system tray, colour-coded:
-  - **Green** ≥ 40%
-  - **Orange** 20–40%
+  - **Green** ≥ 60%
+  - **Orange** 20–60%
   - **Red** < 20%
 - Left-click → menu showing "Razer Viper V3 Pro: NN%"
 - Auto-refresh every 5 minutes

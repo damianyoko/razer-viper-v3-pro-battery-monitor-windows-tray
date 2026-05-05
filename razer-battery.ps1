@@ -144,7 +144,7 @@ function Update-TrayIcon {
     } else {
         $ni.Text = "Razer mouse: $pct%"
         if     ($pct -lt 20) { $color = [System.Drawing.Color]::FromArgb(255,  70,  70) }
-        elseif ($pct -lt 40) { $color = [System.Drawing.Color]::FromArgb(255, 165,   0) }
+        elseif ($pct -lt 60) { $color = [System.Drawing.Color]::FromArgb(255, 165,   0) }
         else                 { $color = [System.Drawing.Color]::FromArgb( 80, 220, 100) }
     }
 
