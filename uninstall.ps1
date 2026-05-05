@@ -13,6 +13,9 @@ if (Get-ItemProperty $runKey -Name $entry -ErrorAction SilentlyContinue) {
 }
 
 $killed = 0
+Get-Process razer-viper-tray -ErrorAction SilentlyContinue | ForEach-Object {
+    Stop-Process -Id $_.Id -Force; $killed++
+}
 Get-WmiObject Win32_Process -Filter "Name='powershell.exe'" |
     Where-Object { $_.CommandLine -match 'razer-battery' } |
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force; $killed++ }

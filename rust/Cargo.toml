@@ -1,0 +1,39 @@
+[package]
+name = "razer-viper-tray"
+version = "2.0.0"
+edition = "2021"
+description = "System tray battery indicator for Razer Viper V3 Pro"
+license = "MIT"
+repository = "https://github.com/damianyoko/razer-viper-v3-pro-battery-monitor-windows-tray"
+
+[[bin]]
+name = "razer-viper-tray"
+path = "src/main.rs"
+
+[dependencies]
+tray-icon = { version = "0.19", default-features = false }
+muda = { version = "0.15", default-features = false }
+
+[dependencies.windows]
+version = "0.58"
+features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_Devices_DeviceAndDriverInstallation",
+    "Win32_Devices_HumanInterfaceDevice",
+    "Win32_Devices_Properties",
+    "Win32_System_IO",
+    "Win32_System_Threading",
+    "Win32_System_LibraryLoader",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_Graphics_Gdi",
+]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"

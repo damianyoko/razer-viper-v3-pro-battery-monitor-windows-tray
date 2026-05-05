@@ -1,3 +1,6 @@
 diagnose.ps1
 *.log
 *.bak
+rust/target/
+release-bundle/
+*.zip

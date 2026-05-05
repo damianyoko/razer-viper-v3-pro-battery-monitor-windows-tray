@@ -2,17 +2,16 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows%2010%2B-blue)](https://www.microsoft.com/windows)
-[![Language: PowerShell](https://img.shields.io/badge/language-PowerShell-5391FE)](https://learn.microsoft.com/powershell)
+[![Language: Rust](https://img.shields.io/badge/language-Rust-orange)](https://www.rust-lang.org)
 [![Release](https://img.shields.io/github/v/release/damianyoko/razer-viper-v3-pro-battery-monitor-windows-tray)](https://github.com/damianyoko/razer-viper-v3-pro-battery-monitor-windows-tray/releases)
 
-A tiny system tray battery indicator for the **Razer Viper V3 Pro** wireless mouse. Pure PowerShell. No Razer Synapse, no kernel drivers, no admin required.
+A tiny system tray battery indicator for the **Razer Viper V3 Pro** wireless mouse. No Razer Synapse, no kernel drivers, no admin required. ~9 MB resident, single-file `.exe`.
 
 <!-- Drop a screenshot or GIF here once captured: ![tray screenshot](docs/screenshot.png) -->
 
-
 ## Why
 
-Synapse is bloatware. It runs three services, installs kernel-mode drivers, and phones home — just to show you a battery percentage. This script does the same job in ~150 lines of PowerShell, talks to the mouse over standard HID feature reports, and uses about 30 MB of RAM.
+Synapse is bloatware. It runs three services, installs kernel-mode drivers, and phones home — just to show you a battery percentage. This tool does the same job in a 213 KB binary that uses ~9 MB of RAM and talks directly to the mouse over standard HID feature reports.
 
 ## What you get
 
@@ -20,60 +19,72 @@ Synapse is bloatware. It runs three services, installs kernel-mode drivers, and 
   - **Green** ≥ 60%
   - **Orange** 20–60%
   - **Red** < 20%
-- Left-click → menu showing "Razer Viper V3 Pro: NN%"
-- Auto-refresh every 5 minutes
-- "Refresh now" and "Exit" in the same menu
-- Survives reboots once installed
-
-## Requirements
-
-- Windows 10 or 11
-- PowerShell 5.1+ (built into Windows)
-- A Razer Viper V3 Pro (USB dongle plugged in)
+- **Left-click** → small popup near cursor showing the percentage. Click again to dismiss.
+- **Right-click** → menu: *Refresh now* / *Exit*.
+- Auto-refresh every 5 minutes (system-coalesced waitable timer; battery-friendly on laptops).
+- Single-instance guard via named mutex — clicking the icon twice doesn't stack trays.
+- Survives reboots once installed.
 
 ## Install
 
-1. Clone or download this repo somewhere stable, e.g. `C:\Users\<you>\Documents\Scripts\RazerBattery`.
-2. From an unprivileged PowerShell prompt in that folder:
+### Easy: pre-built binary (recommended)
+
+1. Download `razer-viper-tray-vX.Y.Z.zip` from the [latest release](https://github.com/damianyoko/razer-viper-v3-pro-battery-monitor-windows-tray/releases/latest).
+2. Extract anywhere stable (e.g. `C:\Users\<you>\Tools\RazerBattery\`).
+3. From an unprivileged PowerShell prompt in that folder:
    ```powershell
    .\install.ps1
    ```
-   This adds an entry to `HKCU\…\Run` so the tray launches at every login. No admin needed.
-3. Either log out and back in, or run `start-hidden.vbs` to start it immediately.
+   Adds an `HKCU\…\Run` entry and launches the tray immediately.
+
+### From source (requires Rust toolchain)
+
+```powershell
+git clone https://github.com/damianyoko/razer-viper-v3-pro-battery-monitor-windows-tray
+cd razer-viper-v3-pro-battery-monitor-windows-tray\rust
+cargo build --release
+copy target\release\razer-viper-tray.exe ..\
+cd ..
+.\install.ps1
+```
+
+### PowerShell-only fallback
+
+If you don't want to download a binary or build Rust, the original PowerShell implementation is still in this repo (`razer-battery.ps1` + `start-hidden.vbs`). The installer will use it if no `.exe` is present. ~125 MB RAM though.
 
 ## Uninstall
 
 ```powershell
 .\uninstall.ps1
 ```
-Removes the autostart entry and stops any running instance. Delete the folder afterwards if you want.
-
-## Troubleshooting
-
-**The icon doesn't appear** — Windows hides new tray icons by default. Click the `^` arrow in your taskbar and drag the battery icon out into the always-visible area.
-
-**It shows `?` (offline)** — your dongle isn't connected, or the mouse is asleep. Move the mouse and click "Refresh now". If it stays offline, unplug and replug the dongle.
-
-**"Running scripts is disabled on this system"** — your local PowerShell execution policy blocks scripts. Run this once: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`. The launcher passes `-ExecutionPolicy Bypass` so this normally isn't needed, but some corporate machines override that.
-
-**Two icons appear on boot** — duplicate Run entries. Run `.\uninstall.ps1` then `.\install.ps1` again to reset cleanly.
+Removes the autostart entry and stops any running instance.
 
 ## How it works
 
 The Viper V3 Pro exposes its mouse HID interface (UsagePage `0x01`, Usage `0x02`) on the dongle (VID `0x1532`, PID `0x00C0` / `0x00C1`). Razer's command protocol piggybacks on that interface as a 90-byte feature report.
 
-The script:
-1. Enumerates HID devices for VID `0x1532`
-2. Opens each candidate with `desired_access = 0` to bypass `mouclass`'s exclusive lock (mice can't be opened with read/write while in use, but feature-report-only access works)
-3. Filters for the mouse collection (UP=1, Usage=2, FeatureReportByteLength=91)
+The binary:
+1. Enumerates HID device interfaces via SetupAPI for VID `0x1532`
+2. Opens each candidate with `dwDesiredAccess = 0` to bypass `mouclass`'s exclusive lock (mice can't be opened with read/write while in use, but feature-report-only access works)
+3. Filters for the mouse collection (UP=1, Usage=2, FeatureReportByteLength ≥ 91)
 4. Sends a Razer feature report: `command_class = 0x07`, `command_id = 0x80` (get battery level), transaction ID `0x1F`
 5. Reads the response; battery byte is `arguments[1]` (offset 10), scaled `0–255 → 0–100%`
 
-The protocol details come from the [OpenRazer](https://github.com/openrazer/openrazer) project.
+Protocol details from the [OpenRazer](https://github.com/openrazer/openrazer) project.
 
 ## Why it only works for Viper V3 Pro
 
 The PID filter and transaction ID are hard-coded for this mouse. Other Razer mice use different PIDs and some older ones use TID `0x3F`. If you have a different Razer mouse, [xzeldon/razer-battery-report](https://github.com/xzeldon/razer-battery-report) supports more devices.
+
+## Troubleshooting
+
+**The icon doesn't appear** — Windows hides new tray icons by default. Click the `^` arrow in your taskbar and drag the battery icon out into the always-visible area.
+
+**It shows `?` (offline)** — your dongle isn't connected, or the mouse is asleep. Move the mouse and click *Refresh now*. If it stays offline, unplug and replug the dongle.
+
+**Two icons appear on boot** — duplicate Run entries. Run `.\uninstall.ps1` then `.\install.ps1` to reset cleanly.
+
+**Antivirus complains** — the binary is unsigned. Submit a false-positive report or whitelist it; the source is right here for verification.
 
 ## License
 
