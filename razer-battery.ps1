@@ -34,6 +34,9 @@ public static class Hid {
     [DllImport("hid.dll", SetLastError=true)]
     public static extern int HidP_GetCaps(IntPtr p, ref Caps c);
 
+    [DllImport("user32.dll", SetLastError=true)]
+    public static extern bool DestroyIcon(IntPtr hIcon);
+
     [StructLayout(LayoutKind.Sequential)]
     public struct Caps {
         public ushort Usage;
@@ -182,10 +185,13 @@ function Update-TrayIcon {
     }
     $g.Dispose(); $outlinePen.Dispose(); $capBrush.Dispose()
 
-    $hIcon  = $bmp.GetHicon()
+    $hIcon = $bmp.GetHicon()
     $oldIco = $ni.Icon
+    $oldHandle = if ($oldIco) { $oldIco.Handle } else { [IntPtr]::Zero }
     $ni.Icon = [System.Drawing.Icon]::FromHandle($hIcon)
     if ($oldIco) { $oldIco.Dispose() }
+    # Release the underlying HICON for the previous icon (Icon.Dispose alone leaks it)
+    if ($oldHandle -ne [IntPtr]::Zero) { [Hid]::DestroyIcon($oldHandle) | Out-Null }
     $bmp.Dispose()
 }
 
