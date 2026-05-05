@@ -15,15 +15,15 @@ Synapse is bloatware. It runs multiple services, installs kernel-mode drivers, a
 
 ### Footprint comparison
 
-| | Razer Synapse 3 | This tool |
+| | **Viper Tray** (this) | Razer Synapse 3 |
 |---|---|---|
-| Disk install | ~500 MB – 1.5 GB (depending on modules) | **213 KB** |
-| RAM at idle | ~200–400 MB across `Razer Synapse Service`, `RazerCentralService`, `Razer Game Manager`, helpers | **~9 MB** |
-| Background services | 3+ user-mode services, autostart | None |
-| Kernel drivers | `RzCommon.sys`, `RzDev_*.sys` (per-device) | None |
-| Admin required | Yes (installer) | No |
-| Network calls | Yes (telemetry, updates, account) | None |
-| Does it tell you the battery % | Yes | Yes |
+| Disk install | **213 KB** | ~500 MB – 1.5 GB (depending on modules) |
+| RAM at idle | **~9 MB** | ~200–400 MB across `Razer Synapse Service`, `RazerCentralService`, `Razer Game Manager`, helpers |
+| Background services | None | 3+ user-mode services, autostart |
+| Kernel drivers | None | `RzCommon.sys`, `RzDev_*.sys` (per-device) |
+| Admin required | No | Yes (installer) |
+| Network calls | None | Yes (telemetry, updates, account) |
+| Tells you the battery % | Yes | Yes |
 
 If you only have a Razer mouse to monitor battery, you're paying a four-orders-of-magnitude tax for a number you check once a day. This tool gives you the number without the tax.
 
