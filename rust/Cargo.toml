@@ -1,6 +1,6 @@
 [package]
 name = "razer-viper-tray"
-version = "2.0.0"
+version = "2.0.1"
 edition = "2021"
 description = "System tray battery indicator for Razer Viper V3 Pro"
 license = "MIT"

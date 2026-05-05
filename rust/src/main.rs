@@ -186,8 +186,11 @@ fn main() {
 fn arm_timer(h: SendHandle, secs: i64) {
     // Negative = relative, units = 100ns. 0 secs => fire immediately (-1 == 100ns).
     let due_ns: i64 = if secs <= 0 { -1 } else { -secs * 10_000_000 };
+    // Loud-fail: if the timer can't be armed, the worker thread will block forever
+    // and the tray will go stale silently. Better to crash than hang invisibly.
     unsafe {
-        let _ = SetWaitableTimer(h.0, &due_ns, 0, None, None, false);
+        SetWaitableTimer(h.0, &due_ns, 0, None, None, false)
+            .expect("SetWaitableTimer failed — worker would be dead");
     }
 }
 

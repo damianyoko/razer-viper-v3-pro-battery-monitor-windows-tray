@@ -172,31 +172,41 @@ fn try_query(path: &str) -> Option<u8> {
         }
         req[89] = crc;
 
-        let ok = HidD_SetFeature(handle, req.as_ptr() as *mut _, REPORT_LEN as u32);
-        if !ok.as_bool() {
-            let _ = CloseHandle(handle);
-            return None;
+        // Retry loop: each attempt is a full SetFeature -> sleep -> GetFeature cycle,
+        // with escalating sleep so the dongle has time to finish its 2.4GHz round-trip
+        // to the mouse. Only status 0x02 is accepted as success; 0x01 means busy.
+        let sleeps_ms = [80u64, 150, 250];
+        let mut result: Option<u8> = None;
+        for &sleep_ms in &sleeps_ms {
+            let ok = HidD_SetFeature(handle, req.as_ptr() as *mut _, REPORT_LEN as u32);
+            if !ok.as_bool() {
+                break;
+            }
+            sleep(Duration::from_millis(sleep_ms));
+
+            let mut resp = [0u8; REPORT_LEN];
+            let ok = HidD_GetFeature(handle, resp.as_mut_ptr() as *mut _, REPORT_LEN as u32);
+            if !ok.as_bool() {
+                break;
+            }
+
+            if resp[1] == 0x02 {
+                let raw = resp[10];
+                if raw == 0 {
+                    // mouse asleep / not-yet-ready; treat as offline (the firmware will
+                    // beep and the scroll wheel turns red long before it actually hits 0%)
+                    break;
+                }
+                let pct = ((raw as u32 * 100) / 255) as u8;
+                result = Some(pct.min(100));
+                break;
+            }
+            // 0x01 = busy: retry with a longer sleep. Anything else: bail.
+            if resp[1] != 0x01 {
+                break;
+            }
         }
-
-        sleep(Duration::from_millis(80));
-
-        let mut resp = [0u8; REPORT_LEN];
-        let ok = HidD_GetFeature(handle, resp.as_mut_ptr() as *mut _, REPORT_LEN as u32);
         let _ = CloseHandle(handle);
-        if !ok.as_bool() {
-            return None;
-        }
-
-        // Status: 0x02 = success, 0x01 = busy
-        if resp[1] != 0x01 && resp[1] != 0x02 {
-            return None;
-        }
-        // Battery byte at arguments[1] -> response index 10
-        let raw = resp[10];
-        if raw == 0 {
-            return None; // mouse asleep / not yet ready
-        }
-        let pct = ((raw as u32 * 100) / 255) as u8;
-        Some(pct.min(100))
+        result
     }
 }

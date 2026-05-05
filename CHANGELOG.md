@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.0.1 — 2026-05-05
+
+Bug fixes from the v2.0.0 review.
+
+- **Popup click-away dismissal works.** v2.0.0 used `WM_KILLFOCUS` which never fires when the window is shown with `SW_SHOWNOACTIVATE` — clicks outside the popup did nothing. Now uses `SetCapture` + `WM_CAPTURECHANGED` so any click anywhere dismisses the popup. README claim now matches behaviour.
+- **Popup position clamped to monitor work area.** v2.0.0 could spill the popup off the right edge of the screen or onto an adjacent monitor when the cursor was near the boundary. Now uses `MonitorFromPoint` + `GetMonitorInfoW` and flips the popup below the cursor if it would overflow the top of the work area.
+- **HID `busy` (status 0x01) responses are now properly retried** with full Set/Get cycles and escalating sleep (80 → 150 → 250 ms) instead of being accepted with stale data.
+- **Replaced `static mut POPUP_TEXT` with `GWLP_USERDATA`** — proper per-window storage, no `unsafe` data race surface, future-proof against Rust 2024 lints.
+- **`SetWaitableTimer` failure no longer silent** — the worker thread depends on it; failure now panics loudly rather than leaving a permanently stale tray icon.
+- README: added footprint comparison vs Razer Synapse 3.
+
 ## v2.0.0 — 2026-05-05
 
 Full Rust rewrite. Same protocol, much smaller footprint.
