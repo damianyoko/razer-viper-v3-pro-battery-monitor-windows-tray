@@ -15,11 +15,13 @@ Synapse is bloatware. It runs multiple services, installs kernel-mode drivers, a
 
 ### Footprint comparison
 
-| | **Viper Tray** (this) | Razer Synapse 3 |
+Razer's currently-recommended client is **Synapse 4** (modular installer, Mouse module only).
+
+| | **Viper Tray** (this) | Razer Synapse 4 |
 |---|---|---|
-| Disk install | **213 KB** | ~500 MB – 1.5 GB (depending on modules) |
-| RAM at idle | **~9 MB** | ~200–400 MB across `Razer Synapse Service`, `RazerCentralService`, `Razer Game Manager`, helpers |
-| Background services | None | 3+ user-mode services, autostart |
+| Disk install | **213 KB** | ~250 MB – 1 GB (varies with modules; +Chroma adds more) |
+| RAM at idle | **~9 MB** | ~150–350 MB across `Razer Synapse Service`, `RazerAppEngine`, helpers |
+| Background services | None | Multiple user-mode services, autostart |
 | Kernel drivers | None | `RzCommon.sys`, `RzDev_*.sys` (per-device) |
 | Admin required | No | Yes (installer) |
 | Network calls | None | Yes (telemetry, updates, account) |

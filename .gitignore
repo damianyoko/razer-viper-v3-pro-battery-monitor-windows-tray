@@ -4,3 +4,4 @@ diagnose.ps1
 rust/target/
 release-bundle/
 *.zip
+viper-tray.exe
