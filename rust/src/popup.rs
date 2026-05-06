@@ -111,8 +111,14 @@ unsafe fn create_popup(text: &str) -> HWND {
 
     // Capture the mouse so clicks anywhere — including outside the popup — come to us.
     SetCapture(hwnd);
+
+    // Auto-dismiss timer: 5 seconds.
+    SetTimer(hwnd, AUTO_DISMISS_TIMER_ID, 5000, None);
+
     hwnd
 }
+
+const AUTO_DISMISS_TIMER_ID: usize = 1;
 
 unsafe fn clamp_to_work_area(cursor: POINT, win_w: i32, win_h: i32) -> (i32, i32) {
     // Pick the monitor the cursor is on; fall back gracefully if MonitorFromPoint fails.
@@ -170,6 +176,7 @@ unsafe fn create_font() -> HFONT {
 unsafe fn dismiss(hwnd: HWND) {
     // Release capture first so it doesn't leak to whichever window becomes foreground.
     let _ = ReleaseCapture();
+    let _ = KillTimer(hwnd, AUTO_DISMISS_TIMER_ID);
     OPEN_POPUP_HWND.compare_exchange(
         hwnd.0,
         null_mut(),
@@ -234,6 +241,14 @@ unsafe extern "system" fn wnd_proc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM)
         WM_LBUTTONDOWN | WM_RBUTTONDOWN | WM_MBUTTONDOWN
         | WM_NCLBUTTONDOWN | WM_NCRBUTTONDOWN | WM_NCMBUTTONDOWN => {
             dismiss(hwnd);
+            LRESULT(0)
+        }
+
+        // Auto-dismiss after the timer fires (set to 5s in create_popup).
+        WM_TIMER => {
+            if wp.0 == AUTO_DISMISS_TIMER_ID {
+                dismiss(hwnd);
+            }
             LRESULT(0)
         }
 

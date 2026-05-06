@@ -1,4 +1,6 @@
-// Build a 32x32 RGBA buffer for the tray icon: horizontal battery shape with colored fill.
+// 32x32 RGBA tray icon: a green "V" outline with battery-level fill inside.
+// The V outline stays green (Viper brand). The fill drops with battery level
+// and shifts colour as it gets low.
 
 const W: u32 = 32;
 const H: u32 = 32;
@@ -6,100 +8,96 @@ const H: u32 = 32;
 #[derive(Clone, Copy)]
 struct Rgba(u8, u8, u8, u8);
 
-const TRANSPARENT: Rgba = Rgba(0, 0, 0, 0);
-const WHITE: Rgba = Rgba(255, 255, 255, 255);
+const OUTLINE: Rgba = Rgba( 70, 220,  90, 255); // brand green, always
+const OFFLINE: Rgba = Rgba(120, 120, 120, 255); // grey when no reading
 
-fn fill_color(pct: Option<u8>) -> Rgba {
-    match pct {
-        None => Rgba(150, 150, 150, 255),
-        Some(p) if p < 20 => Rgba(255, 70, 70, 255),
-        Some(p) if p < 60 => Rgba(255, 165, 0, 255),
-        Some(_) => Rgba(80, 220, 100, 255),
-    }
+// V geometry. The V is drawn between rows TOP and BOT, with strokes that
+// taper toward the centre at BOT.
+const TOP: i32 = 4;
+const BOT: i32 = 28;
+const LEFT_OUTER:  i32 = 4;
+const RIGHT_OUTER: i32 = 27;
+const STROKE: i32 = 3;
+const SPAN: i32 = 11; // outer-x change between TOP and BOT
+
+fn fill_color(pct: u8) -> Rgba {
+    if pct < 20      { Rgba(255,  60,  60, 255) }
+    else if pct < 60 { Rgba(255, 165,   0, 255) }
+    else             { Rgba( 70, 220,  90, 255) }
+}
+
+fn put(buf: &mut [u8], x: i32, y: i32, c: Rgba) {
+    if x < 0 || y < 0 || (x as u32) >= W || (y as u32) >= H { return; }
+    let i = ((y as u32 * W + x as u32) * 4) as usize;
+    buf[i]     = c.0;
+    buf[i + 1] = c.1;
+    buf[i + 2] = c.2;
+    buf[i + 3] = c.3;
+}
+
+fn fill_row(buf: &mut [u8], y: i32, x_start: i32, x_end: i32, c: Rgba) {
+    if x_end < x_start { return; }
+    for x in x_start..=x_end { put(buf, x, y, c); }
+}
+
+// At row y, what are the outer/inner edges of the V's strokes?
+// (left_outer, left_inner, right_inner, right_outer)
+fn edges_at(y: i32) -> (i32, i32, i32, i32) {
+    let progress = (y - TOP).max(0).min(BOT - TOP);
+    let shift = (SPAN * progress) / (BOT - TOP);
+    let lo = LEFT_OUTER + shift;
+    let li = lo + STROKE;
+    let ro = RIGHT_OUTER - shift;
+    let ri = ro - STROKE;
+    (lo, li, ri, ro)
 }
 
 pub fn build_icon_rgba(pct: Option<u8>) -> Vec<u8> {
     let mut buf = vec![0u8; (W * H * 4) as usize];
 
-    // Battery body outline: rectangle from (2,8) to (25,23), 2px stroke
-    // Cap: filled rectangle from (26,12) to (28,19)
-    // Inner area: (4,10) to (23,21)
-
-    let put = |buf: &mut Vec<u8>, x: u32, y: u32, c: Rgba| {
-        if x < W && y < H {
-            let i = ((y * W + x) * 4) as usize;
-            buf[i] = c.0;
-            buf[i + 1] = c.1;
-            buf[i + 2] = c.2;
-            buf[i + 3] = c.3;
-        }
-    };
-    let fill_rect =
-        |buf: &mut Vec<u8>, x0: u32, y0: u32, x1: u32, y1: u32, c: Rgba| {
-            for y in y0..=y1 {
-                for x in x0..=x1 {
-                    put(buf, x, y, c);
-                }
-            }
-        };
-    let stroke_rect =
-        |buf: &mut Vec<u8>, x0: u32, y0: u32, x1: u32, y1: u32, c: Rgba, w: u32| {
-            // Top and bottom bars
-            for x in x0..=x1 {
-                for d in 0..w {
-                    put(buf, x, y0 + d, c);
-                    put(buf, x, y1 - d, c);
-                }
-            }
-            // Left and right bars
-            for y in y0..=y1 {
-                for d in 0..w {
-                    put(buf, x0 + d, y, c);
-                    put(buf, x1 - d, y, c);
-                }
-            }
-        };
-
-    // Clear
-    for px in buf.chunks_exact_mut(4) {
-        px[0] = 0;
-        px[1] = 0;
-        px[2] = 0;
-        px[3] = 0;
-    }
-
-    // Battery outline (white, 2px)
-    stroke_rect(&mut buf, 2, 8, 25, 23, WHITE, 2);
-
-    // Battery cap (white, filled)
-    fill_rect(&mut buf, 26, 12, 28, 19, WHITE);
-
-    // Fill / placeholder
-    let color = fill_color(pct);
+    // === Fill (drawn first so the outline overlaps it cleanly) ===
     if let Some(p) = pct {
-        // Inner fill area: x 4..=23 (width 20), y 10..=21 (height 12)
-        let inner_w = 20u32;
-        let fill_w = ((inner_w as u32 * p as u32) / 100).max(0) as u32;
-        if fill_w > 0 {
-            fill_rect(&mut buf, 4, 10, 4 + fill_w - 1, 21, color);
+        let fill = fill_color(p);
+        // Available fill rows: from TOP+1 down to roughly where the V tip closes (~y=23).
+        let fill_top = BOT - 1;
+        let fill_bot = TOP + 1;
+        // Actually fill from top down: pct=100 -> entire V interior filled.
+        // Compute the y at which the fill surface sits.
+        // pct=100 -> surface_y = TOP+1 (full)
+        // pct=0   -> surface_y = BOT-1 (empty)
+        let span = (fill_top - fill_bot) as i32;
+        let surface_y = fill_top - (span * p as i32 / 100);
+
+        for y in surface_y..=fill_top {
+            let (_lo, li, ri, _ro) = edges_at(y);
+            if ri >= li {
+                fill_row(&mut buf, y, li, ri, fill);
+            }
         }
     } else {
-        // Offline: draw a "?" using a few pixels (very crude)
-        // Draw a small grey '?' in the inner area: top arc + dot
-        let q = color;
-        // top curve
-        for x in 9..=14 {
-            put(&mut buf, x, 11, q);
+        // Offline: a thin grey line at the bottom interior so the V doesn't look broken.
+        let (_lo, li, ri, _ro) = edges_at(BOT - 2);
+        if ri >= li {
+            fill_row(&mut buf, BOT - 2, li, ri, OFFLINE);
         }
-        put(&mut buf, 15, 12, q);
-        put(&mut buf, 15, 13, q);
-        put(&mut buf, 14, 14, q);
-        put(&mut buf, 13, 15, q);
-        put(&mut buf, 12, 16, q);
-        put(&mut buf, 12, 17, q);
-        // dot
-        put(&mut buf, 12, 19, q);
-        put(&mut buf, 12, 20, q);
+    }
+
+    // === Outline (always green) ===
+    for y in TOP..=BOT {
+        let (lo, li, ri, ro) = edges_at(y);
+        // Left stroke: lo..li
+        if li >= lo { fill_row(&mut buf, y, lo, li, OUTLINE); }
+        // Right stroke: ri..ro
+        if ro >= ri { fill_row(&mut buf, y, ri, ro, OUTLINE); }
+    }
+
+    // Cap the bottom point — if the strokes overlap at the tip, draw a small
+    // wedge so the V comes to a clean point.
+    for y in BOT-1..=BOT+1 {
+        let (lo, _li, _ri, ro) = edges_at((y).min(BOT));
+        if ro >= lo {
+            fill_row(&mut buf, y, lo.max(LEFT_OUTER), ro.min(RIGHT_OUTER), OUTLINE);
+        }
     }
 
     buf

@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.2.0 — 2026-05-06
+
+New icon design + popup polish.
+
+- **New tray icon: green "V" outline (Viper brand) with battery-level fill inside.** Replaces the original horizontal-battery shape that read too much like a generic laptop battery indicator. The V outline stays green; the interior fill drops with the battery level and shifts colour (green ≥60% → orange 20–60% → red <20%).
+- **Popup auto-dismisses after 5 seconds** if you don't click it. Click-anywhere dismissal still works for instant close.
+- `install.ps1` switched from `HKCU\Run` to a Startup folder shortcut for more reliable autostart on Windows 11 — Run-key entries for unsigned binaries were getting silently skipped on some boots.
+- `uninstall.ps1` cleans up both the new shortcut and any legacy `HKCU\Run` entries from prior versions.
+
 ## v2.1.0 — 2026-05-05
 
 Renamed to **Viper Tray**. GitHub repo also renamed to `viper-tray` (old URLs redirect).
