@@ -9,6 +9,8 @@ A tiny system tray battery indicator for the **Razer Viper V3 Pro** wireless mou
 
 <p align="center">
   <img src="docs/demo.gif" alt="Viper Tray demo" />
+  <br/>
+  <sub><em>First interaction: left-click → popup with the percentage. Second: hover → native tooltip.</em></sub>
 </p>
 
 ## Why
