@@ -7,7 +7,9 @@
 
 A tiny system tray battery indicator for the **Razer Viper V3 Pro** wireless mouse. No Razer Synapse, no kernel drivers, no admin required. ~9 MB resident, single-file `.exe`.
 
-![Viper Tray demo](docs/demo.gif)
+<p align="center">
+  <img src="docs/demo.gif" alt="Viper Tray demo" />
+</p>
 
 ## Why
 
@@ -27,7 +29,7 @@ Razer's currently-recommended client is **Synapse 4** (modular installer, Mouse 
 | Network calls | None | Yes (telemetry, updates, account) |
 | Tells you the battery % | Yes | Yes |
 
-If you only have a Razer mouse to monitor battery, you're paying a four-orders-of-magnitude tax for a number you check once a day. This tool gives you the number without the tax.
+If the only thing you use Synapse for is checking your mouse battery, this does the same job at roughly 1/30th the RAM and a fraction of a percent of the disk footprint.
 
 ## What you get
 
