@@ -1,6 +1,7 @@
 # Install: register Viper Tray to autostart on login, and start it now.
-# No admin required; writes only to HKCU.
-# Prefers the Rust .exe; falls back to the PowerShell launcher.
+# No admin required; writes only to the user's profile.
+# Uses a Startup folder shortcut (more reliable than HKCU\Run on Windows 11
+# for unsigned binaries; Run keys get silently skipped under various conditions).
 
 $ErrorActionPreference = 'Stop'
 
@@ -8,45 +9,58 @@ $here   = Split-Path -Parent $MyInvocation.MyCommand.Path
 $exe    = Join-Path $here "viper-tray.exe"
 $exeOld = Join-Path $here "razer-viper-tray.exe"  # pre-rename binary
 $vbs    = Join-Path $here "start-hidden.vbs"
-$runKey = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
-$entry  = "ViperTray"
-$entryOld = "RazerBatteryTray"  # pre-rename Run entry; clean up if present
 
-# Clean up any prior name so we don't end up with two autostart entries.
-if (Get-ItemProperty $runKey -Name $entryOld -ErrorAction SilentlyContinue) {
-    Remove-ItemProperty $runKey -Name $entryOld -Force
-    Write-Host "Removed legacy autostart entry: $entryOld" -ForegroundColor DarkYellow
-}
-
-# Pick the best available launcher.
+# Pick the best available target.
 if (Test-Path $exe) {
-    $launch = "`"$exe`""
+    $target = $exe
     Write-Host "Using Rust binary: viper-tray.exe" -ForegroundColor Cyan
 } elseif (Test-Path $exeOld) {
-    $launch = "`"$exeOld`""
-    Write-Host "Using legacy binary: razer-viper-tray.exe (consider re-downloading)" -ForegroundColor DarkYellow
+    $target = $exeOld
+    Write-Host "Using legacy binary: razer-viper-tray.exe" -ForegroundColor DarkYellow
 } elseif (Test-Path $vbs) {
-    $launch = "wscript.exe `"$vbs`""
+    $target = "wscript.exe"
+    $vbsArg = $vbs
     Write-Host "Using PowerShell fallback: start-hidden.vbs" -ForegroundColor Cyan
 } else {
     throw "No launcher found in $here (expected viper-tray.exe or start-hidden.vbs)"
 }
 
-Set-ItemProperty -Path $runKey -Name $entry -Value $launch -Type String
-Write-Host "Autostart registered: HKCU\...\Run\$entry" -ForegroundColor Green
+# Clean up any prior install state.
+$startupDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+$lnk        = Join-Path $startupDir "Viper Tray.lnk"
+$runKey     = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+$saKey      = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"
+foreach ($n in @("ViperTray", "RazerBatteryTray")) {
+    if (Get-ItemProperty $runKey -Name $n -ErrorAction SilentlyContinue) {
+        Remove-ItemProperty $runKey -Name $n -Force
+        Write-Host "Removed legacy HKCU\Run entry: $n" -ForegroundColor DarkYellow
+    }
+    if (Get-ItemProperty $saKey -Name $n -ErrorAction SilentlyContinue) {
+        Remove-ItemProperty $saKey -Name $n -Force
+    }
+}
 
-# Stop any currently-running instances (any name).
+# Create the Startup folder shortcut.
+$ws = New-Object -ComObject WScript.Shell
+$sc = $ws.CreateShortcut($lnk)
+$sc.TargetPath = $target
+if ($vbsArg) { $sc.Arguments = "`"$vbsArg`"" }
+$sc.WorkingDirectory = $here
+$sc.WindowStyle = 7  # minimised
+$sc.Description = "Viper Tray battery indicator"
+$sc.Save()
+Write-Host "Autostart shortcut created: $lnk" -ForegroundColor Green
+
+# Stop any currently-running instance to avoid duplicates.
 Get-Process viper-tray, razer-viper-tray -ErrorAction SilentlyContinue | Stop-Process -Force
 Get-WmiObject Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue |
     Where-Object { $_.CommandLine -match 'razer-battery' } |
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 
-# Launch.
-if (Test-Path $exe) {
-    Start-Process -FilePath $exe
-} elseif (Test-Path $exeOld) {
-    Start-Process -FilePath $exeOld
+# Launch immediately.
+if ($vbsArg) {
+    Start-Process -FilePath $target -ArgumentList "`"$vbsArg`"" -WorkingDirectory $here -WindowStyle Hidden
 } else {
-    Start-Process -FilePath "wscript.exe" -ArgumentList "`"$vbs`"" -WorkingDirectory $here -WindowStyle Hidden
+    Start-Process -FilePath $target
 }
 Write-Host "Started. Look for the battery icon in your system tray." -ForegroundColor Green
