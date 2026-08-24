@@ -15,7 +15,7 @@ A tiny system tray battery indicator for the **Razer Viper V3 Pro** wireless mou
 
 ## Why
 
-Synapse is bloatware. It runs multiple services, installs kernel-mode drivers, and phones home — just to show you a battery percentage. This tool does the same job in a 213 KB binary that uses ~9 MB of RAM and talks directly to the mouse over standard HID feature reports.
+Synapse is bloatware. It runs multiple services, installs kernel-mode drivers, and phones home, just to show you a battery percentage. This tool does the same job in a 213 KB binary that uses ~9 MB of RAM and talks directly to the mouse over standard HID feature reports.
 
 ### Footprint comparison
 
